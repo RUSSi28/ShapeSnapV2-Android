@@ -1,0 +1,10 @@
+/build
+.gradle/
+captures/
+local.properties
+*.jks
+*.keystore
+google-services.json
+.idea/
+*.iml
+Thumbs.db
