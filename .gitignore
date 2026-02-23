@@ -19,3 +19,4 @@ captures/
 google-services.json
 .idea/
 Thumbs.db
+firebase-debug.log
