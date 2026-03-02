@@ -4,9 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil3.util.CoilUtils.result
 import com.orukunnn.shapesnapapp.data.datasource.FirebaseAuthDatasource
-import com.orukunnn.shapesnapapp.data.model.PresetEntity
+import com.orukunnn.shapesnapapp.data.model.Preset
 import com.orukunnn.shapesnapapp.data.repository.PresetsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,9 +13,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface HomeState {
-    data class Success(val presets: List<PresetEntity>): HomeState
-    data object Loading: HomeState
-    data object Error: HomeState
+    data class Success(val presets: List<Preset>) : HomeState
+    data object Loading : HomeState
+    data object Error : HomeState
 }
 
 class HomeScreenViewModel(

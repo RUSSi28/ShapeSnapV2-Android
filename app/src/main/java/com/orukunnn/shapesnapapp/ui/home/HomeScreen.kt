@@ -19,13 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.orukunnn.shapesnapapp.data.model.PresetEntity
+import com.orukunnn.shapesnapapp.data.model.Preset
 import org.koin.androidx.compose.koinViewModel
+import kotlin.time.ExperimentalTime
 
 @Composable
 fun HomeScreen(
@@ -33,7 +33,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    when(state) {
+    when (state) {
         is HomeState.Success -> {
             HomeScreen(
                 presets = (state as HomeState.Success).presets
@@ -55,9 +55,10 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 private fun HomeScreen(
-    presets: List<PresetEntity>,
+    presets: List<Preset>,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 300.dp),
@@ -90,7 +91,7 @@ private fun HomeScreen(
                             contentDescription = null,
                             modifier = Modifier.size(250.dp)
                         )
-                        Text("uploaded by : " + it.uploadedBy)
+                        Text("created at : " + it.createdAt)
                     }
                 }
             }
@@ -98,28 +99,28 @@ private fun HomeScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Preview(showBackground = true, widthDp = 800) // 横幅が広い場合のプレビュー
-@Composable
-fun HomeScreenPreview() {
-    val presets = listOf(
-        PresetEntity(
-            presetId = "1",
-            characterTagId = "shinano",
-            uploadedBy = "orukunnn"
-        ),
-        PresetEntity(
-            presetId = "2",
-            characterTagId = "shinano",
-            uploadedBy = "orusannn"
-        ),
-        PresetEntity(
-            presetId = "3",
-            characterTagId = "sio_kaihen",
-            uploadedBy = "orurun"
-        )
-    )
-    HomeScreen(
-        presets = presets,
-    )
-}
+//@Preview(showBackground = true)
+//@Preview(showBackground = true, widthDp = 800) // 横幅が広い場合のプレビュー
+//@Composable
+//fun HomeScreenPreview() {
+//    val presets = listOf(
+//        PresetEntity(
+//            presetId = "1",
+//            characterTagId = "shinano",
+//            createdAt = "orukunnn"
+//        ),
+//        PresetEntity(
+//            presetId = "2",
+//            characterTagId = "shinano",
+//            createdAt = "orusannn"
+//        ),
+//        PresetEntity(
+//            presetId = "3",
+//            characterTagId = "sio_kaihen",
+//            createdAt = "orurun"
+//        )
+//    )
+//    HomeScreen(
+//        presets = presets,
+//    )
+//}
