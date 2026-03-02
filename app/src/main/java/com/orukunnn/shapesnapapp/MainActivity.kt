@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -86,9 +83,7 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
             ) {
-                Column(
-//                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column {
                     Spacer(modifier = Modifier.size(8.dp))
                     val serverClientId = stringResource(R.string.default_web_client_id)
                     LogInNavDrawerItem(
@@ -103,17 +98,6 @@ fun MainScreen(
                             viewModel.setShowLogOutConfirmDialog(true)
                         },
                     )
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.Red)
-                            .padding(16.dp)
-                            .clickable(
-                                onClick = {}
-                            )
-                    ) {
-                        Text("Logout")
-                    }
                 }
             }
         },
