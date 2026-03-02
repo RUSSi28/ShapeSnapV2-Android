@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.orukunnn.shapesnapapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.orukunnn.shapesnapapp"
@@ -57,12 +55,17 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.ui.auth)
+    // implementation(libs.firebase.ui.auth) // Remove this
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Credential Manager
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Navigation3
     implementation(libs.androidx.navigation3.ui)

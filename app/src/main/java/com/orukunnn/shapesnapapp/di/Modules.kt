@@ -1,6 +1,7 @@
 package com.orukunnn.shapesnapapp.di
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.orukunnn.shapesnapapp.MainScreenViewModel
 import com.orukunnn.shapesnapapp.data.datasource.FirebaseAuthDatasource
 import com.orukunnn.shapesnapapp.data.datasource.FirestoreDatasource
 import com.orukunnn.shapesnapapp.data.repository.PresetsRepository
@@ -15,6 +16,7 @@ val modules = module {
     single<PresetsRepository> { PresetsRepositoryImpl(get()) }
     single { FirestoreDatasource(get()) }
     single { FirebaseAuthDatasource() }
+    viewModel { MainScreenViewModel(get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { HomeScreenViewModel(get()) }
+    viewModel { HomeScreenViewModel(get(), get()) }
 }

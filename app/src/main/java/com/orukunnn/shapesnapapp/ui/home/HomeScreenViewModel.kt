@@ -1,24 +1,30 @@
 package com.orukunnn.shapesnapapp.ui.home
 
+import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.util.CoilUtils.result
+import com.orukunnn.shapesnapapp.data.datasource.FirebaseAuthDatasource
 import com.orukunnn.shapesnapapp.data.model.PresetEntity
 import com.orukunnn.shapesnapapp.data.repository.PresetsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.koin.core.KoinApplication.Companion.init
+
+sealed interface HomeState {
+    data class Success(val presets: List<PresetEntity>): HomeState
+    data object Loading: HomeState
+    data object Error: HomeState
+}
 
 class HomeScreenViewModel(
-    private val presetsRepository: PresetsRepository
-): ViewModel() {
-    val _presets = MutableStateFlow<List<PresetEntity>>(emptyList())
-    val presets: StateFlow<List<PresetEntity>> = _presets.asStateFlow()
+    private val presetsRepository: PresetsRepository,
+    private val firebaseAuthDatasource: FirebaseAuthDatasource
+) : ViewModel() {
+    private val _state = MutableStateFlow<HomeState>(HomeState.Loading)
+    val state: StateFlow<HomeState> = _state.asStateFlow()
 
     init {
         loadPresets()
@@ -27,13 +33,20 @@ class HomeScreenViewModel(
     fun loadPresets() {
         viewModelScope.launch {
             try {
+                _state.value = HomeState.Loading
                 val result = presetsRepository.getFirstPresets()
-                _presets.value = result.first
+                _state.value = HomeState.Success(result.first)
                 Log.d("HomeScreenViewModel", "Loaded ${result.first.size} presets")
             } catch (e: Exception) {
                 Log.d("HomeScreenViewModel", "loadPresets: ${e.message}")
             }
+        }
+    }
 
+    fun logOut(context: Context, onCompleted: () -> Unit) {
+        viewModelScope.launch {
+            firebaseAuthDatasource.signOut(context)
+            onCompleted()
         }
     }
 }
