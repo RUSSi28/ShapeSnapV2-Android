@@ -19,11 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.orukunnn.shapesnapapp.data.model.Preset
+import com.orukunnn.shapesnapapp.data.model.PresetsFactory
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -99,28 +101,12 @@ private fun HomeScreen(
     }
 }
 
-//@Preview(showBackground = true)
-//@Preview(showBackground = true, widthDp = 800) // 横幅が広い場合のプレビュー
-//@Composable
-//fun HomeScreenPreview() {
-//    val presets = listOf(
-//        PresetEntity(
-//            presetId = "1",
-//            characterTagId = "shinano",
-//            createdAt = "orukunnn"
-//        ),
-//        PresetEntity(
-//            presetId = "2",
-//            characterTagId = "shinano",
-//            createdAt = "orusannn"
-//        ),
-//        PresetEntity(
-//            presetId = "3",
-//            characterTagId = "sio_kaihen",
-//            createdAt = "orurun"
-//        )
-//    )
-//    HomeScreen(
-//        presets = presets,
-//    )
-//}
+@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 800) // 横幅が広い場合のプレビュー
+@Composable
+fun HomeScreenPreview() {
+    val presets = PresetsFactory.createPresetList()
+    HomeScreen(
+        presets = presets,
+    )
+}
