@@ -27,6 +27,8 @@ koin = "4.2.0-RC1"
 credentials = "1.6.0-beta01"
 googleid = "1.1.1"
 
+kotlinxDatetime = "0.7.1"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -71,6 +73,7 @@ io-koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 io-koin-android = { module = "io.insert-koin:koin-android"}
 io-koin-compose = { module = "io.insert-koin:koin-androidx-compose"}
 
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

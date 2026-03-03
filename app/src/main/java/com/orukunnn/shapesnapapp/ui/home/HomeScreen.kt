@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.orukunnn.shapesnapapp.data.model.Preset
 import com.orukunnn.shapesnapapp.data.model.PresetsFactory
+import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -93,7 +94,11 @@ private fun HomeScreen(
                             contentDescription = null,
                             modifier = Modifier.size(250.dp)
                         )
-                        Text("created at : " + it.createdAt)
+                        val createdAt = buildString {
+                            append("created at : ")
+                            append(it.createdAt.convertShapeSnapDateFormat())
+                        }
+                        Text(createdAt)
                     }
                 }
             }
