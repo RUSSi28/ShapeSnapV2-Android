@@ -28,8 +28,8 @@ object PresetsFactory {
     @OptIn(ExperimentalTime::class)
     fun createPresetList(): List<Preset> {
         val presetList = mutableListOf<Preset>()
-        repeat(10) {
-            presetList.add(createPreset())
+        repeat(10) { index ->
+            presetList.add(createPreset(presetId = "id_$index"))
         }
 
         return presetList
