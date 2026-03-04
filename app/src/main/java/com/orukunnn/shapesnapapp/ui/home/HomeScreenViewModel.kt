@@ -25,6 +25,9 @@ class HomeScreenViewModel(
     private val _state = MutableStateFlow<HomeState>(HomeState.Loading)
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         loadPresets()
     }
@@ -37,7 +40,23 @@ class HomeScreenViewModel(
                 _state.value = HomeState.Success(result.first)
                 Log.d("HomeScreenViewModel", "Loaded ${result.first.size} presets")
             } catch (e: Exception) {
+                _state.value = HomeState.Error
                 Log.d("HomeScreenViewModel", "loadPresets: ${e.message}")
+            }
+        }
+    }
+
+    fun refreshPresets() {
+        viewModelScope.launch {
+            try {
+                _isRefreshing.value = true
+                val result = presetsRepository.getFirstPresets()
+                _state.value = HomeState.Success(result.first)
+                Log.d("HomeScreenViewModel", "Refreshed ${result.first.size} presets")
+            } catch (e: Exception) {
+                Log.d("HomeScreenViewModel", "refreshPresets error: ${e.message}")
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
