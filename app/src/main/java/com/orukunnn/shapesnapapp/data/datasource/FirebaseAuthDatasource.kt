@@ -25,7 +25,7 @@ class FirebaseAuthDatasource {
         awaitClose { auth.removeAuthStateListener(listener) }
     }
 
-    suspend fun signInWithGoogle(context: Context, serverClientId: String) {
+    suspend fun signInWithGoogle(context: Context, serverClientId: String): FirebaseUser? {
         val credentialManager = CredentialManager.create(context)
 
         val googleIdOption = GetGoogleIdOption.Builder()
@@ -49,8 +49,10 @@ class FirebaseAuthDatasource {
         ) {
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
             val authCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
-            auth.signInWithCredential(authCredential).await()
+            val authResult = auth.signInWithCredential(authCredential).await()
+            return authResult.user
         }
+        return null
     }
 
     suspend fun signOut(context: Context) {

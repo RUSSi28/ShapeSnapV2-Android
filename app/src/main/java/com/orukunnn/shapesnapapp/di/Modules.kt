@@ -16,7 +16,7 @@ val modules = module {
     single<PresetsRepository> { PresetsRepositoryImpl(get()) }
     single { FirestoreDatasource(get()) }
     single { FirebaseAuthDatasource() }
-    viewModel { MainScreenViewModel(get()) }
+    viewModel { MainScreenViewModel(get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { HomeScreenViewModel(get(), get()) }
+    viewModel { HomeScreenViewModel(get()) }
 }

@@ -3,7 +3,7 @@ package com.orukunnn.shapesnapapp.data.repository
 import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.orukunnn.shapesnapapp.data.datasource.FirestoreDatasource
-import com.orukunnn.shapesnapapp.data.model.Preset
+import com.orukunnn.shapesnapapp.data.model.preset.Preset
 
 class PresetsRepositoryImpl(
     private val firestoreDatasource: FirestoreDatasource

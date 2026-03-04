@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.orukunnn.shapesnapapp.data.model.Preset
-import com.orukunnn.shapesnapapp.data.model.PresetsFactory
+import com.orukunnn.shapesnapapp.data.model.preset.Preset
+import com.orukunnn.shapesnapapp.data.model.preset.PresetsFactory
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime

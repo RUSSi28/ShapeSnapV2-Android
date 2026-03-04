@@ -4,8 +4,9 @@ import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.orukunnn.shapesnapapp.data.model.Preset
-import com.orukunnn.shapesnapapp.data.model.PresetEntity
+import com.orukunnn.shapesnapapp.data.model.preset.Preset
+import com.orukunnn.shapesnapapp.data.model.preset.PresetEntity
+import com.orukunnn.shapesnapapp.data.model.user.User
 import kotlinx.coroutines.tasks.await
 
 class FirestoreDatasource(
@@ -33,7 +34,21 @@ class FirestoreDatasource(
         return Pair(presets, lastDocInPage)
     }
 
+    suspend fun saveUserIfNotExists(userId: String) {
+        val userRef = firestore.collection(USERS_COLLECTION).document(userId)
+        val snapshot = userRef.get().await()
+        if (!snapshot.exists()) {
+            val newUser = User(
+                uid = userId,
+                posts = emptyList(),
+                storage = emptyList()
+            )
+            userRef.set(newUser).await()
+        }
+    }
+
     companion object {
         private const val PRESETS_COLLECTION = "presets"
+        private const val USERS_COLLECTION = "users"
     }
 }

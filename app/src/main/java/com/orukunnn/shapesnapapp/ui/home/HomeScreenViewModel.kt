@@ -1,11 +1,9 @@
 package com.orukunnn.shapesnapapp.ui.home
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orukunnn.shapesnapapp.data.datasource.FirebaseAuthDatasource
-import com.orukunnn.shapesnapapp.data.model.Preset
+import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.repository.PresetsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +18,6 @@ sealed interface HomeState {
 
 class HomeScreenViewModel(
     private val presetsRepository: PresetsRepository,
-    private val firebaseAuthDatasource: FirebaseAuthDatasource
 ) : ViewModel() {
     private val _state = MutableStateFlow<HomeState>(HomeState.Loading)
     val state: StateFlow<HomeState> = _state.asStateFlow()
@@ -58,13 +55,6 @@ class HomeScreenViewModel(
             } finally {
                 _isRefreshing.value = false
             }
-        }
-    }
-
-    fun logOut(context: Context, onCompleted: () -> Unit) {
-        viewModelScope.launch {
-            firebaseAuthDatasource.signOut(context)
-            onCompleted()
         }
     }
 }

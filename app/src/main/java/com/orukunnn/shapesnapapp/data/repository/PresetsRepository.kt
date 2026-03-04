@@ -1,7 +1,7 @@
 package com.orukunnn.shapesnapapp.data.repository
 
 import com.google.firebase.firestore.DocumentSnapshot
-import com.orukunnn.shapesnapapp.data.model.Preset
+import com.orukunnn.shapesnapapp.data.model.preset.Preset
 
 interface PresetsRepository {
     suspend fun getFirstPresets(): Pair<List<Preset>, DocumentSnapshot?>

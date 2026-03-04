@@ -1,4 +1,4 @@
-package com.orukunnn.shapesnapapp.data.model
+package com.orukunnn.shapesnapapp.data.model.preset
 
 import com.google.firebase.Timestamp
 
