@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.orukunnn.shapesnapapp.ShapeSnapHomeAppBar
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.preset.PresetsFactory
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
@@ -40,31 +42,45 @@ import kotlin.time.ExperimentalTime
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeScreenViewModel = koinViewModel()
+    title: String,
+    onMenuButtonClick: () -> Unit,
+    viewModel: HomeScreenViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
-    when (state) {
-        is HomeState.Success -> {
-            HomeScreen(
-                presets = (state as HomeState.Success).presets,
-                isRefreshing = isRefreshing,
-                onRefresh = { viewModel.refreshPresets() }
+    Scaffold(
+        topBar = {
+            ShapeSnapHomeAppBar(
+                title = title,
+                onMenuClick = onMenuButtonClick
             )
         }
-
-        is HomeState.Loading -> {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CircularProgressIndicator()
+    ) { innerPadding ->
+        when (state) {
+            is HomeState.Success -> {
+                HomeScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    presets = (state as HomeState.Success).presets,
+                    isRefreshing = isRefreshing,
+                    onRefresh = { viewModel.refreshPresets() }
+                )
             }
-        }
 
-        is HomeState.Error -> {
+            is HomeState.Loading -> {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
 
+            is HomeState.Error -> {
+
+            }
         }
     }
 }
@@ -72,6 +88,7 @@ fun HomeScreen(
 @OptIn(ExperimentalTime::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreen(
+    modifier: Modifier = Modifier,
     presets: List<Preset>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
@@ -86,7 +103,7 @@ private fun HomeScreen(
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.fillMaxSize()
         ) {
             items(
                 items = presets,

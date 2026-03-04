@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
-import com.orukunnn.shapesnapapp.data.repository.PresetsRepository
+import com.orukunnn.shapesnapapp.data.repository.preset.PresetsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +33,7 @@ class HomeScreenViewModel(
         viewModelScope.launch {
             try {
                 _state.value = HomeState.Loading
-                val result = presetsRepository.getFirstPresets()
+                val result = presetsRepository.getInitialPresets()
                 _state.value = HomeState.Success(result.first)
                 Log.d("HomeScreenViewModel", "Loaded ${result.first.size} presets")
             } catch (e: Exception) {
@@ -47,7 +47,7 @@ class HomeScreenViewModel(
         viewModelScope.launch {
             try {
                 _isRefreshing.value = true
-                val result = presetsRepository.getFirstPresets()
+                val result = presetsRepository.getInitialPresets()
                 _state.value = HomeState.Success(result.first)
                 Log.d("HomeScreenViewModel", "Refreshed ${result.first.size} presets")
             } catch (e: Exception) {
