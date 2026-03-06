@@ -25,8 +25,15 @@ class PostManageViewModel(
 ) : ViewModel() {
     val currentUser = authRepository.currentUser
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private val _state = MutableStateFlow<PostManageState>(PostManageState.Loading)
     val state: StateFlow<PostManageState> = _state.asStateFlow()
+
+    private val _showDeleteConfirmDialog = MutableStateFlow(false)
+    val showDeleteConfirmDialog = _showDeleteConfirmDialog.asStateFlow()
+
+    private val _deleteTargetId = MutableStateFlow("")
+    val deleteTargetId = _deleteTargetId.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -37,6 +44,23 @@ class PostManageViewModel(
                     _state.value = PostManageState.Success(emptyList())
                 }
             }
+        }
+    }
+
+    fun setShowDeleteConfirmDialog(
+        show: Boolean,
+        targetPresetId: String = "",
+    ) {
+        _showDeleteConfirmDialog.value = show
+        if (targetPresetId.isBlank()) return
+        _deleteTargetId.value = targetPresetId
+    }
+
+    fun deletePreset(presetId: String) {
+        viewModelScope.launch {
+            userRepository.deletePresetBy(presetId, currentUser.value?.uid ?: "")
+            _deleteTargetId.value = ""
+            loadPresets(currentUser.value?.uid ?: "")
         }
     }
 

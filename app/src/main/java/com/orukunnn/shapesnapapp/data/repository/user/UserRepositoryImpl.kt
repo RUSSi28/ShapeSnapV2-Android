@@ -14,6 +14,10 @@ class UserRepositoryImpl(
         return firestoreDatasource.getPresetsBy(presetIds)
     }
 
+    override suspend fun deletePresetBy(presetId: String, userId: String) {
+        return firestoreDatasource.deletePresetBy(presetId, userId)
+    }
+
     override suspend fun saveUserIfNotExists(userId: String) {
         firestoreDatasource.saveUserIfNotExists(userId)
     }

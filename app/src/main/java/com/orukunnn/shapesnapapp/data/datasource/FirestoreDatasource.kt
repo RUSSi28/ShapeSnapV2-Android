@@ -2,6 +2,7 @@ package com.orukunnn.shapesnapapp.data.datasource
 
 import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
@@ -58,6 +59,19 @@ class FirestoreDatasource(
                 .toObject(PresetEntity::class.java)
                 ?.let { Preset(it) }
         }
+    }
+
+    suspend fun deletePresetBy(presetId: String, userId: String) {
+        if (userId.isBlank()) return
+        if (presetId.isBlank()) return
+        firestore.collection(PRESETS_COLLECTION)
+            .document(presetId)
+            .delete()
+            .await()
+        firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .update("posts", FieldValue.arrayRemove(presetId))
+            .await()
     }
 
     suspend fun saveUserIfNotExists(userId: String) {

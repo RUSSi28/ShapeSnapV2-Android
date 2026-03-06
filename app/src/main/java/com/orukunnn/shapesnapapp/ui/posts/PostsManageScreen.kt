@@ -46,6 +46,9 @@ fun PostsManageScreen(
     viewModel: PostManageViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val deleteTargetPresetId = viewModel.deleteTargetId.collectAsStateWithLifecycle().value
+    val showDeleteConfirmDialog =
+        viewModel.showDeleteConfirmDialog.collectAsStateWithLifecycle().value
 
     Scaffold(
         topBar = {
@@ -60,6 +63,20 @@ fun PostsManageScreen(
                 PostsManageScreen(
                     modifier = Modifier.padding(innerPadding),
                     posts = (state as PostManageState.Success).presets,
+                    showDeleteConfirmDialog = showDeleteConfirmDialog,
+                    setShowDeleteConfirmDialog = { show, presetId ->
+                        viewModel.setShowDeleteConfirmDialog(
+                            show = show,
+                            targetPresetId = presetId
+                        )
+                    },
+                    onDeleteConfirm = {
+                        viewModel.setShowDeleteConfirmDialog(show = false)
+                        viewModel.deletePreset(presetId = deleteTargetPresetId)
+                    },
+                    onDismiss = {
+                        viewModel.setShowDeleteConfirmDialog(show = false)
+                    },
                 )
             }
 
@@ -83,7 +100,11 @@ fun PostsManageScreen(
 @Composable
 private fun PostsManageScreen(
     posts: List<Preset>,
-    modifier: Modifier = Modifier
+    showDeleteConfirmDialog: Boolean,
+    setShowDeleteConfirmDialog: (Boolean, String) -> Unit,
+    onDeleteConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 300.dp),
@@ -126,10 +147,12 @@ private fun PostsManageScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Button(
-                            onClick = {},
+                            onClick = {
+                                setShowDeleteConfirmDialog(true, it.presetId)
+                            },
                             shape = RoundedCornerShape(4.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.White
                             ),
                             modifier = Modifier.weight(1f)
@@ -141,11 +164,24 @@ private fun PostsManageScreen(
             }
         }
     }
+
+    if (showDeleteConfirmDialog) {
+        DeleteConfirmDialog(
+            onDeleteConfirm = onDeleteConfirm,
+            onDismiss = onDismiss,
+        )
+        }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun PostManageScreenPreview() {
     val presets = PresetsFactory.createPresetList()
-    PostsManageScreen(posts = presets)
+    PostsManageScreen(
+        posts = presets,
+        showDeleteConfirmDialog = false,
+        setShowDeleteConfirmDialog = { _, _ -> },
+        onDeleteConfirm = {},
+        onDismiss = {},
+    )
 }
