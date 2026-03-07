@@ -48,6 +48,18 @@ class FirestoreDatasource(
         }
     }
 
+    suspend fun getStorageIdsOf(userId: String): List<String> {
+        if (userId.isBlank()) return emptyList()
+        val userRef = firestore.collection(USERS_COLLECTION).document(userId)
+        val snapshot = userRef.get().await()
+        return if (snapshot.exists()) {
+            val user = snapshot.toObject(User::class.java)
+            user?.storage ?: emptyList()
+        } else {
+            emptyList()
+        }
+    }
+
     suspend fun getPresetsBy(presetIds: List<String>): List<Preset> {
         if (presetIds.isEmpty()) return emptyList()
         return presetIds.mapNotNull { id ->
@@ -71,6 +83,24 @@ class FirestoreDatasource(
         firestore.collection(USERS_COLLECTION)
             .document(userId)
             .update("posts", FieldValue.arrayRemove(presetId))
+            .await()
+    }
+
+    suspend fun addStorageBy(presetId: String, userId: String) {
+        if (userId.isBlank()) return
+        if (presetId.isBlank()) return
+        firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .update("storage", FieldValue.arrayUnion(presetId))
+            .await()
+    }
+
+    suspend fun removeStorageBy(presetId: String, userId: String) {
+        if (userId.isBlank()) return
+        if (presetId.isBlank()) return
+        firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .update("storage", FieldValue.arrayRemove(presetId))
             .await()
     }
 

@@ -10,12 +10,24 @@ class UserRepositoryImpl(
         return firestoreDatasource.getPresetIdsOf(userId)
     }
 
+    override suspend fun getStorageIdsOf(userId: String): List<String> {
+        return firestoreDatasource.getStorageIdsOf(userId)
+    }
+
     override suspend fun getPresetsBy(presetIds: List<String>): List<Preset> {
         return firestoreDatasource.getPresetsBy(presetIds)
     }
 
     override suspend fun deletePresetBy(presetId: String, userId: String) {
         return firestoreDatasource.deletePresetBy(presetId, userId)
+    }
+
+    override suspend fun addStorageBy(presetId: String, userId: String) {
+        return firestoreDatasource.addStorageBy(presetId, userId)
+    }
+
+    override suspend fun removeStorageBy(presetId: String, userId: String) {
+        return firestoreDatasource.removeStorageBy(presetId, userId)
     }
 
     override suspend fun saveUserIfNotExists(userId: String) {

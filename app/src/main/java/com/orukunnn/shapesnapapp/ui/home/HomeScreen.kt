@@ -1,5 +1,6 @@
 package com.orukunnn.shapesnapapp.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,11 @@ fun HomeScreen(
                     modifier = Modifier.padding(innerPadding),
                     presets = (state as HomeState.Success).presets,
                     isRefreshing = isRefreshing,
-                    onRefresh = { viewModel.refreshPresets() }
+                    onRefresh = { viewModel.refreshPresets() },
+                    onSaveClick = { presetId ->
+                        viewModel.saveToStorage(presetId)
+                        Log.d("HomeScreen", "onSaveClick: $presetId")
+                    }
                 )
             }
 
@@ -92,6 +97,7 @@ private fun HomeScreen(
     presets: List<Preset>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    onSaveClick: (String) -> Unit,
 ) {
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -149,7 +155,7 @@ private fun HomeScreen(
                             }
                             Spacer(modifier = Modifier.size(8.dp))
                             Button(
-                                onClick = {},
+                                onClick = { onSaveClick(it.presetId) },
                                 shape = RoundedCornerShape(4.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -175,6 +181,7 @@ fun HomeScreenPreview() {
     HomeScreen(
         presets = presets,
         isRefreshing = false,
-        onRefresh = {}
+        onRefresh = {},
+        onSaveClick = {}
     )
 }

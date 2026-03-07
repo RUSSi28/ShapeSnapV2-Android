@@ -29,6 +29,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.orukunnn.shapesnapapp.ui.home.HomeScreen
 import com.orukunnn.shapesnapapp.ui.login.LogOutConfirmDialog
 import com.orukunnn.shapesnapapp.ui.posts.PostsManageScreen
+import com.orukunnn.shapesnapapp.ui.storage.StorageManageScreen
 import com.orukunnn.shapesnapapp.ui.theme.ShapeSnapAppTheme
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -95,8 +96,13 @@ fun MainScreen(
                             },
                         )
                     }
-                    entry<Storage> {
-
+                    entry<Storage> { navKey ->
+                        StorageManageScreen(
+                            title = navKey.toString(),
+                            onArrowBackIconClick = {
+                                backStack.removeLastOrNull()
+                            }
+                        )
                     }
                     entry<Posts> { navKey ->
                         PostsManageScreen(
