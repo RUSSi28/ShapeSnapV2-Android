@@ -10,7 +10,9 @@ class PresetsRepositoryImpl(
 ) : PresetsRepository {
     override suspend fun getInitialPresets(): Pair<List<Preset>, DocumentSnapshot?> {
         return try {
-            firestoreDatasource.getPresets(PAGE_SIZE, null)
+            val pair = firestoreDatasource.getPresetEntities(PAGE_SIZE)
+            val presets = pair.first.map { Preset(it) }
+            Pair(presets, null)
         } catch (e: Exception) {
             Log.d("PresetsRepositoryImpl", "getFirstPresets: ${e.message}")
             Pair(emptyList(), null)

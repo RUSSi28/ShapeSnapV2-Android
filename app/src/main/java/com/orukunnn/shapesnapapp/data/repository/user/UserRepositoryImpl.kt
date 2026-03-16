@@ -2,6 +2,8 @@ package com.orukunnn.shapesnapapp.data.repository.user
 
 import com.orukunnn.shapesnapapp.data.datasource.FirestoreDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
+import com.orukunnn.shapesnapapp.data.model.user.User
+import com.orukunnn.shapesnapapp.data.model.user.toUserEntity
 
 class UserRepositoryImpl(
     private val firestoreDatasource: FirestoreDatasource
@@ -31,6 +33,15 @@ class UserRepositoryImpl(
     }
 
     override suspend fun saveUserIfNotExists(userId: String) {
-        firestoreDatasource.saveUserIfNotExists(userId)
+        val user = firestoreDatasource.getUser(userId)?.let { User(it) }
+        if (user != null) return
+        val newUser = User(
+            uid = userId,
+            posts = emptyList(),
+            storage = emptyList(),
+        )
+        firestoreDatasource.saveUser(
+            newUser.toUserEntity()
+        )
     }
 }

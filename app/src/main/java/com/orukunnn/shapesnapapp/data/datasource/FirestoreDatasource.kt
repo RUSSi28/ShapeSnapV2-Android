@@ -8,16 +8,17 @@ import com.google.firebase.firestore.Query
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.preset.PresetEntity
 import com.orukunnn.shapesnapapp.data.model.user.User
+import com.orukunnn.shapesnapapp.data.model.user.UserEntity
 import kotlinx.coroutines.tasks.await
 
 class FirestoreDatasource(
     private val firestore: FirebaseFirestore
 ) {
 
-    suspend fun getPresets(
+    suspend fun getPresetEntities(
         limit: Long,
-        lastVisibleDocument: DocumentSnapshot?
-    ): Pair<List<Preset>, DocumentSnapshot?> {
+        lastVisibleDocument: DocumentSnapshot? = null
+    ): Pair<List<PresetEntity>, DocumentSnapshot?> {
         var query = firestore.collection(PRESETS_COLLECTION)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(limit)
@@ -25,15 +26,10 @@ class FirestoreDatasource(
             query = query.startAfter(lastVisibleDocument)
         }
         val querySnapshot = query.get().await()
-        Log.d("FirestoreDatasource", "Snapshot size: ${querySnapshot.size()}")
         val presetEntities = querySnapshot.toObjects(PresetEntity::class.java)
-        val presets = presetEntities.map {
-            Preset(it)
-        }
-        Log.d("FirestoreDatasource", "Converted presets: ${presets.size}")
         val lastDocInPage = querySnapshot.documents.lastOrNull()
 
-        return Pair(presets, lastDocInPage)
+        return Pair(presetEntities, lastDocInPage)
     }
 
     suspend fun getPresetIdsOf(userId: String): List<String> {
@@ -53,7 +49,7 @@ class FirestoreDatasource(
         val userRef = firestore.collection(USERS_COLLECTION).document(userId)
         val snapshot = userRef.get().await()
         return if (snapshot.exists()) {
-            val user = snapshot.toObject(User::class.java)
+            val user = snapshot.toObject(UserEntity::class.java)
             user?.storage ?: emptyList()
         } else {
             emptyList()
@@ -104,18 +100,21 @@ class FirestoreDatasource(
             .await()
     }
 
-    suspend fun saveUserIfNotExists(userId: String) {
-        if (userId.isBlank()) return
-        val userRef = firestore.collection(USERS_COLLECTION).document(userId)
-        val snapshot = userRef.get().await()
-        if (!snapshot.exists()) {
-            val newUser = User(
-                uid = userId,
-                posts = emptyList(),
-                storage = emptyList()
-            )
-            userRef.set(newUser).await()
-        }
+    suspend fun getUser(userId: String): UserEntity? {
+        if (userId.isBlank()) return null
+        return firestore.collection(USERS_COLLECTION)
+            .document(userId)
+            .get()
+            .await()
+            .toObject(UserEntity::class.java)
+    }
+
+    suspend fun saveUser(user: UserEntity) {
+        if (user.uid.isBlank()) return
+        firestore.collection(USERS_COLLECTION)
+            .document(user.uid)
+            .set(user)
+            .await()
     }
 
     companion object {
