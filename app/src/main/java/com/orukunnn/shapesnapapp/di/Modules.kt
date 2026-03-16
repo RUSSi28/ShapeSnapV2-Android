@@ -29,5 +29,5 @@ val modules = module {
     viewModel { MainScreenViewModel(get(), get(), get()) }
     viewModel { HomeScreenViewModel(get(), get(), get(), get()) }
     viewModel { PostManageViewModel(get(), get()) }
-    viewModel { StorageViewModel(get(), get(), get()) }
+    viewModel { StorageViewModel(get(), get()) }
 }

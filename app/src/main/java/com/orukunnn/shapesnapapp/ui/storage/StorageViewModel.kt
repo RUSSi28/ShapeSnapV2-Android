@@ -4,13 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
-import com.orukunnn.shapesnapapp.data.repository.auth.AuthRepository
 import com.orukunnn.shapesnapapp.data.repository.user.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface StorageState {
@@ -20,12 +17,9 @@ sealed interface StorageState {
 }
 
 class StorageViewModel(
-    private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val sharedPreferenceDatasource: SharedPreferenceDatasource,
 ) : ViewModel() {
-    val currentUser = authRepository.currentUser
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _state = MutableStateFlow<StorageState>(StorageState.Loading)
     val state: StateFlow<StorageState> = _state.asStateFlow()
