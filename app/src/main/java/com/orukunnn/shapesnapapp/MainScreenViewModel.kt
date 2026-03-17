@@ -4,11 +4,16 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasource
+import com.orukunnn.shapesnapapp.data.model.user.User
 import com.orukunnn.shapesnapapp.data.repository.auth.AuthRepository
 import com.orukunnn.shapesnapapp.data.repository.user.UserRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -17,8 +22,16 @@ class MainScreenViewModel(
     private val userRepository: UserRepository,
     private val sharedPreferenceDatasource: SharedPreferenceDatasource,
 ): ViewModel() {
-    val currentUser = authRepository.currentUser
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val currentUser: StateFlow<User?> = authRepository.currentUser
+        .flatMapLatest { firebaseUser ->
+            if (firebaseUser != null) {
+                userRepository.getUserFlow(firebaseUser.uid)
+            } else {
+                flowOf(null)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _showLogOutConfirmDialog = MutableStateFlow(false)
     val showLogOutConfirmDialog = _showLogOutConfirmDialog.asStateFlow()

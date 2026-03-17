@@ -1,13 +1,19 @@
 package com.orukunnn.shapesnapapp.ui.storage
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.repository.user.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface StorageState {
@@ -21,23 +27,28 @@ class StorageViewModel(
     private val sharedPreferenceDatasource: SharedPreferenceDatasource,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<StorageState>(StorageState.Loading)
-    val state: StateFlow<StorageState> = _state.asStateFlow()
+    private val userId = sharedPreferenceDatasource.getUserId()
+
+    val state: StateFlow<StorageState> = (if (userId != null) {
+        userRepository.getSavedPresetsFlow(userId)
+    } else {
+        flowOf(emptyList())
+    }).map { presets -> StorageState.Success(presets) as StorageState }
+        .catch { e ->
+            Log.e("StorageViewModel", "Error fetching storage: ${e.message}")
+            emit(StorageState.Error)
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = StorageState.Loading
+        )
 
     private val _showDeleteConfirmDialog = MutableStateFlow(false)
     val showDeleteConfirmDialog = _showDeleteConfirmDialog.asStateFlow()
 
     private val _deleteTargetId = MutableStateFlow("")
     val deleteTargetId = _deleteTargetId.asStateFlow()
-
-    init {
-        val userId = sharedPreferenceDatasource.getUserId()
-        if (userId != null) {
-            loadStorage(userId)
-        } else {
-            _state.value = StorageState.Success(emptyList())
-        }
-    }
 
     fun setShowDeleteConfirmDialog(
         show: Boolean,
@@ -51,23 +62,11 @@ class StorageViewModel(
     fun removeStorage(presetId: String) {
         val userId = sharedPreferenceDatasource.getUserId() ?: return
         viewModelScope.launch {
-            userRepository.removeStorageBy(presetId, userId)
-            _deleteTargetId.value = ""
-            loadStorage(userId)
-        }
-    }
-
-    fun loadStorage(uid: String) {
-        if (uid.isBlank()) return
-
-        viewModelScope.launch {
-            _state.value = StorageState.Loading
             try {
-                val storageIds = userRepository.getStorageIdsOf(uid)
-                val presets = userRepository.getPresetsBy(storageIds)
-                _state.value = StorageState.Success(presets)
+                userRepository.removeStorageBy(presetId, userId)
+                _deleteTargetId.value = ""
             } catch (e: Exception) {
-                _state.value = StorageState.Error
+                Log.e("StorageViewModel", "Failed to remove from storage: ${e.message}")
             }
         }
     }

@@ -8,7 +8,8 @@ data class Preset @OptIn(ExperimentalTime::class) constructor(
     val characterTagId: String,
     val createdAt: Instant,
     val imageUrl: String,
-    val likes: Int,
+    val likedUserIds: List<String>,
+    val savedUserIds: List<String>,
     val blendShapeWeights: Map<String, Double>,
     val displayName: String,
 ) {
@@ -20,7 +21,8 @@ data class Preset @OptIn(ExperimentalTime::class) constructor(
             Instant.fromEpochSeconds(it.seconds, it.nanoseconds)
         } ?: Instant.DISTANT_PAST,
         imageUrl = remote.imageUrl,
-        likes = remote.likes,
+        likedUserIds = remote.likedUserIds,
+        savedUserIds = remote.savedUserIds,
         blendShapeWeights = remote.blendShapeWeights,
         displayName = remote.displayName,
     )

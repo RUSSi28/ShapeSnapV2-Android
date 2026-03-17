@@ -7,7 +7,8 @@ data class PresetEntity(
     val characterTagId: String = "",
     val createdAt: Timestamp? = null,
     val imageUrl: String = "",
-    val likes: Int = 0,
+    val likedUserIds: List<String> = emptyList(),
+    val savedUserIds: List<String> = emptyList(),
     val blendShapeWeights: Map<String, Double> = emptyMap(),
     val displayName: String = "",
 )

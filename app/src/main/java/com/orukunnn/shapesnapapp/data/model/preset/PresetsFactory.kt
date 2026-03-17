@@ -10,7 +10,8 @@ object PresetsFactory {
         characterTagId: String = "tag_1",
         createdAt: Instant = Instant.fromEpochMilliseconds(1000L),
         imageUrl: String = "",
-        likes: Int = 0,
+        likedUserIds: List<String> = emptyList(),
+        savedUserIds: List<String> = emptyList(),
         blendShapeWeight: Map<String, Double> = mapOf("eye_open" to 0.5, "mouth_smile" to 0.8),
         displayName: String = ""
     ): Preset {
@@ -19,7 +20,8 @@ object PresetsFactory {
             characterTagId = characterTagId,
             createdAt = createdAt,
             imageUrl = imageUrl,
-            likes = likes,
+            likedUserIds = likedUserIds,
+            savedUserIds = savedUserIds,
             blendShapeWeights = blendShapeWeight,
             displayName = displayName
         )

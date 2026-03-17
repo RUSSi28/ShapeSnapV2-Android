@@ -1,5 +1,6 @@
 package com.orukunnn.shapesnapapp
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
@@ -8,14 +9,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShapeSnapHomeAppBar(
     title: String,
     onMenuClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    @OptIn(ExperimentalMaterial3Api::class)
     TopAppBar(
         title = { Text(text = title) },
         navigationIcon = {
@@ -28,16 +37,24 @@ fun ShapeSnapHomeAppBar(
                     )
                 }
             )
-        }
+        },
+        scrollBehavior = scrollBehavior,
+        colors = colors,
+        windowInsets = windowInsets,
+        modifier = modifier
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShapeSnapAppBar(
     title: String,
     onArrowBackIconClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
+    colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    @OptIn(ExperimentalMaterial3Api::class)
     TopAppBar(
         title = { Text(text = title) },
         navigationIcon = {
@@ -50,6 +67,10 @@ fun ShapeSnapAppBar(
                     )
                 }
             )
-        }
+        },
+        scrollBehavior = scrollBehavior,
+        colors = colors,
+        windowInsets = windowInsets,
+        modifier = modifier
     )
 }

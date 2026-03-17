@@ -4,10 +4,19 @@ import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.orukunnn.shapesnapapp.data.datasource.FirestoreDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class PresetsRepositoryImpl(
     private val firestoreDatasource: FirestoreDatasource
 ) : PresetsRepository {
+
+    override fun getPresetsFlow(): Flow<List<Preset>> {
+        return firestoreDatasource.getPresetsFlow().map { entities ->
+            entities.map { Preset(it) }
+        }
+    }
+
     override suspend fun getInitialPresets(): Pair<List<Preset>, DocumentSnapshot?> {
         return try {
             val pair = firestoreDatasource.getPresetEntities(PAGE_SIZE)
