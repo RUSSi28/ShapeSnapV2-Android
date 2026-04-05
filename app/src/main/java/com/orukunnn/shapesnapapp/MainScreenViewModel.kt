@@ -22,7 +22,6 @@ class MainScreenViewModel(
     private val userRepository: UserRepository,
     private val sharedPreferenceDatasource: SharedPreferenceDatasource,
 ): ViewModel() {
-
     @OptIn(ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<User?> = authRepository.currentUser
         .flatMapLatest { firebaseUser ->

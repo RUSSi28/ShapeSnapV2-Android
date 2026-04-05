@@ -8,14 +8,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +32,6 @@ import com.orukunnn.shapesnapapp.ui.login.LogOutConfirmDialog
 import com.orukunnn.shapesnapapp.ui.posts.PostsManageScreen
 import com.orukunnn.shapesnapapp.ui.storage.StorageManageScreen
 import com.orukunnn.shapesnapapp.ui.theme.ShapeSnapAppTheme
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 
@@ -47,6 +47,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     viewModel: MainScreenViewModel = koinViewModel()
@@ -55,66 +56,79 @@ fun MainScreen(
     val showLogOutConfirmDialog by viewModel.showLogOutConfirmDialog.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(Home)
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val serverClientId = stringResource(R.string.default_web_client_id)
 
+    // 現在のルートを取得
+    val currentRoute = backStack.lastOrNull() ?: Home
+
     Box(modifier = Modifier.fillMaxSize()) {
-        NavigationDrawer(
-            drawerState = drawerState,
-            user = user,
-            signInWithGoogle = {
-                viewModel.signInWithGoogle(context, serverClientId)
-            },
-            setShowLogOutConfirmDialog = {
-                viewModel.setShowLogOutConfirmDialog(true)
-            },
-            onNavigateStorageClick = {
-                backStack.add(Storage)
-                coroutineScope.launch {
-                    drawerState.close()
-                }
-            },
-            onNavigatePostsClick = {
-                backStack.add(Posts)
-                coroutineScope.launch {
-                    drawerState.close()
-                }
-            }
-        ) {
-            NavDisplay(
-                backStack = backStack,
-                entryProvider = entryProvider {
-                    entry<Home> { navKey ->
-                        HomeScreen(
-                            title = navKey.toString(),
-                            onMenuButtonClick = {
-                                coroutineScope.launch {
-                                    drawerState.open()
+        Scaffold(
+            // ScaffoldのbottomBarプロパティを使わず、Boxで重ねることでボトムバーの背景を透過させます
+            contentWindowInsets = WindowInsets(0),
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                NavDisplay(
+                    backStack = backStack,
+                    entryProvider = entryProvider {
+                        entry<Home> {
+                            HomeScreen(
+                                title = "ShapeSnap",
+                                isLoggedIn = user != null,
+                                onMenuButtonClick = {
+                                    if (user == null) {
+                                        viewModel.signInWithGoogle(context, serverClientId)
+                                    } else {
+                                        viewModel.setShowLogOutConfirmDialog(true)
+                                    }
+                                },
+                            )
+                        }
+                        entry<Storage> {
+                            StorageManageScreen(
+                                title = "Storage",
+                                onArrowBackIconClick = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    }
                                 }
-                            },
-                        )
-                    }
-                    entry<Storage> { navKey ->
-                        StorageManageScreen(
-                            title = navKey.toString(),
-                            onArrowBackIconClick = {
-                                backStack.removeLastOrNull()
+                            )
+                        }
+                        entry<Posts> {
+                            PostsManageScreen(
+                                title = "Posts",
+                                onArrowBackIconClick = {
+                                    if (backStack.size > 1) {
+                                        backStack.removeAt(backStack.size - 1)
+                                    }
+                                }
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // padding(bottom) を設定しないことで、コンテンツがボトムバーの裏まで回り込む
+                        .padding(top = innerPadding.calculateTopPadding())
+                )
+
+                // ボトムバーをBoxの最下部に重ねる
+                ShapeSnapBottomBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        if (currentRoute != route) {
+                            if (route is Home) {
+                                while (backStack.size > 1) {
+                                    backStack.removeAt(backStack.size - 1)
+                                }
+                            } else {
+                                backStack.add(route as NavKey)
                             }
-                        )
-                    }
-                    entry<Posts> { navKey ->
-                        PostsManageScreen(
-                            title = navKey.toString(),
-                            onArrowBackIconClick = {
-                                backStack.removeLastOrNull()
-                            }
-                        )
-                    }
-                },
-                modifier = Modifier
-            )
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
         }
 
         if (isLoading) {
@@ -125,7 +139,7 @@ fun MainScreen(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = {} // クリックイベントを吸収して背後の画面を触れないようにする
+                        onClick = {}
                     ),
                 contentAlignment = Alignment.Center
             ) {
