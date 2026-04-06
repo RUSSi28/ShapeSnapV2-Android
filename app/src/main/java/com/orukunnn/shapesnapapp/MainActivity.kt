@@ -62,12 +62,7 @@ fun MainScreen(
             backStack = backStack,
             entryProvider = entryProvider {
                 entry<Home> {
-                    HomeScreen(
-                        title = "ShapeSnap",
-                        isLoggedIn = user != null,
-                        onLoginClick = { viewModel.signInWithGoogle(context) },
-                        onLogoutClick = { viewModel.logOut(context) },
-                    )
+                    HomeScreen()
                 }
                 entry<Storage> {
                     StorageManageScreen(

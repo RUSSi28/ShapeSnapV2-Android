@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
@@ -68,27 +69,24 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    title: String,
-    isLoggedIn: Boolean,
-    onLoginClick: () -> Unit,
-    onLogoutClick: () -> Unit,
     viewModel: HomeScreenViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val showLimitReachedDialog by viewModel.showLimitReachedDialog.collectAsStateWithLifecycle()
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val context = LocalContext.current
+
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             ShapeSnapHomeAppBar(
-                title = title,
-                isLoggedIn = isLoggedIn,
-                onLoginClick = onLoginClick,
-                onLogoutClick = onLogoutClick,
+                title = "Shape Snap",
+                isLoggedIn = currentUser != null,
+                onLoginClick = { viewModel.signInWithGoogle(context) },
+                onLogoutClick = { viewModel.logOut(context) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFF8F9F9),

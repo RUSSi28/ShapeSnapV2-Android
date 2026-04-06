@@ -1,8 +1,10 @@
 package com.orukunnn.shapesnapapp.ui.home
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.orukunnn.shapesnapapp.R
 import com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.user.User
@@ -61,11 +63,53 @@ class HomeScreenViewModel(
             initialValue = HomeState.Loading
         )
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     private val _showLimitReachedDialog = MutableStateFlow(false)
     val showLimitReachedDialog = _showLimitReachedDialog.asStateFlow()
+
+    private val _showLogOutConfirmDialog = MutableStateFlow(false)
+    val showLogOutConfirmDialog = _showLogOutConfirmDialog.asStateFlow()
+
+    fun signInWithGoogle(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val user = authRepository.signInWithGoogle(
+                    context = context,
+                    serverClientId = context.getString(R.string.default_web_client_id),
+                )
+                user?.uid?.let { uid ->
+                    sharedPreferenceDatasource.saveUserId(uid)
+                    userRepository.saveUserIfNotExists(uid)
+                }
+            } catch (e: Exception) {
+                // Handle error if needed
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun logOut(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                authRepository.signOut(context)
+                sharedPreferenceDatasource.clear()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun setShowLogOutConfirmDialog(show: Boolean) {
+        _showLogOutConfirmDialog.value = show
+    }
 
     fun dismissLimitDialog() {
         _showLimitReachedDialog.value = false
