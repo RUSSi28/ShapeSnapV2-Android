@@ -64,6 +64,7 @@ import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.preset.PresetsFactory
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -84,7 +85,7 @@ fun HomeScreen(
             val successState = state as HomeState.Success
             HomeSuccessScreen(
                 userId = userId,
-                presets = successState.presets as ImmutableList<Preset>,
+                presets = successState.presets.toPersistentList(),
                 isLoggedIn = currentUser != null,
                 isRefreshing = isRefreshing,
                 showLimitReachedDialog = showLimitReachedDialog,
