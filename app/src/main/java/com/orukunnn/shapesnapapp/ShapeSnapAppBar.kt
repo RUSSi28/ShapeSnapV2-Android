@@ -24,6 +24,7 @@ fun ShapeSnapHomeAppBar(
     title: String,
     isLoggedIn: Boolean,
     onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     colors: TopAppBarColors = TopAppBarDefaults.topAppBarColors(),
@@ -37,33 +38,11 @@ fun ShapeSnapHomeAppBar(
                 fontSize = 20.sp
             )
         },
-//        navigationIcon = {
-//            IconButton(onClick = onMenuClick) {
-//                Box(
-//                    modifier = Modifier
-//                        .size(32.dp)
-//                        .clip(CircleShape)
-//                        .background(Color.LightGray),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Icon(
-//                        painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-//                        contentDescription = "Menu",
-//                        modifier = Modifier.size(20.dp),
-//                        tint = Color.Unspecified
-//                    )
-//                }
-//            }
-//        },
         actions = {
-            IconButton(
-                onClick = onLoginClick
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Settings",
-                    tint = if (isLoggedIn) Color(0xFF005D53) else Color.Gray
-                )
+            if (isLoggedIn) {
+                LogOutIconButton(onLoginClick = onLogoutClick)
+            } else {
+                LogInIconButton(onLoginClick = onLoginClick)
             }
         },
         scrollBehavior = scrollBehavior,
@@ -72,6 +51,41 @@ fun ShapeSnapHomeAppBar(
         modifier = modifier
     )
 }
+
+@Composable
+fun LogInIconButton(
+    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onLoginClick,
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = "ログイン",
+            tint = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun LogOutIconButton(
+    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onLoginClick,
+        modifier = modifier
+    ) {
+        Icon(
+            imageVector = Icons.Default.AccountCircle,
+            contentDescription = "ログアウト",
+            tint = Color(0xFF005D53)
+        )
+    }
+}
+//if (isLoggedIn) Color(0xFF005D53) else
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

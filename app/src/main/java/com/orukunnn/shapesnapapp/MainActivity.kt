@@ -65,13 +65,8 @@ fun MainScreen(
                     HomeScreen(
                         title = "ShapeSnap",
                         isLoggedIn = user != null,
-                        onMenuButtonClick = {
-                            if (user == null) {
-                                viewModel.signInWithGoogle(context)
-                            } else {
-                                viewModel.setShowLogOutConfirmDialog(true)
-                            }
-                        },
+                        onLoginClick = { viewModel.signInWithGoogle(context) },
+                        onLogoutClick = { viewModel.logOut(context) },
                     )
                 }
                 entry<Storage> {

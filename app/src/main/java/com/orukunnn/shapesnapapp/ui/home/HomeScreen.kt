@@ -70,7 +70,8 @@ import kotlin.time.ExperimentalTime
 fun HomeScreen(
     title: String,
     isLoggedIn: Boolean,
-    onMenuButtonClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     viewModel: HomeScreenViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -86,7 +87,8 @@ fun HomeScreen(
             ShapeSnapHomeAppBar(
                 title = title,
                 isLoggedIn = isLoggedIn,
-                onLoginClick = onMenuButtonClick,
+                onLoginClick = onLoginClick,
+                onLogoutClick = onLogoutClick,
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFF8F9F9),
