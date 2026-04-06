@@ -1,5 +1,7 @@
 package com.orukunnn.shapesnapapp.data.model.preset
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -28,12 +30,11 @@ object PresetsFactory {
     }
 
     @OptIn(ExperimentalTime::class)
-    fun createPresetList(): List<Preset> {
-        val presetList = mutableListOf<Preset>()
-        repeat(10) { index ->
-            presetList.add(createPreset(presetId = "id_$index"))
-        }
-
-        return presetList
+    fun createPresetList(): ImmutableList<Preset> {
+        return buildList {
+            repeat(10) { index ->
+                add(createPreset(presetId = "id_$index"))
+            }
+        }.toPersistentList()
     }
 }

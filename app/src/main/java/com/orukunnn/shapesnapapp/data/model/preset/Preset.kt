@@ -1,8 +1,10 @@
 package com.orukunnn.shapesnapapp.data.model.preset
 
+import androidx.compose.runtime.Stable
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+@Stable
 data class Preset @OptIn(ExperimentalTime::class) constructor(
     val presetId: String,
     val characterTagId: String,

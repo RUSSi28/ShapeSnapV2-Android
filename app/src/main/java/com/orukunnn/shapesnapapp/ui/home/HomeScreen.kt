@@ -1,6 +1,6 @@
 package com.orukunnn.shapesnapapp.ui.home
 
-import androidx.compose.foundation.background
+import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,8 +62,8 @@ import coil3.compose.AsyncImage
 import com.orukunnn.shapesnapapp.ShapeSnapHomeAppBar
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.preset.PresetsFactory
-import com.orukunnn.shapesnapapp.data.model.user.User
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
+import kotlinx.collections.immutable.ImmutableList
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -74,19 +75,67 @@ fun HomeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val userId = currentUser?.uid
     val showLimitReachedDialog by viewModel.showLimitReachedDialog.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val context = LocalContext.current
 
+    when (state) {
+        is HomeState.Success -> {
+            val successState = state as HomeState.Success
+            HomeSuccessScreen(
+                userId = userId,
+                presets = successState.presets as ImmutableList<Preset>,
+                isLoggedIn = currentUser != null,
+                isRefreshing = isRefreshing,
+                showLimitReachedDialog = showLimitReachedDialog,
+                onRefresh = { viewModel.refreshPresets() },
+                onLikeClick = { viewModel.toggleLike(it) },
+                onSaveClick = { viewModel.saveToStorage(it) },
+                onLoginClick = { viewModel.signInWithGoogle(context) },
+                onLogoutClick = { viewModel.setShowLogOutConfirmDialog(true) },
+                onDismiss = { viewModel.dismissLimitDialog() }
+            )
+        }
 
+        is HomeState.Loading -> {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is HomeState.Error -> {
+
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeSuccessScreen(
+    userId: String?,
+    presets: ImmutableList<Preset>,
+    isLoggedIn: Boolean,
+    isRefreshing: Boolean,
+    showLimitReachedDialog: Boolean,
+    onRefresh: () -> Unit,
+    onLikeClick: (String) -> Unit,
+    onSaveClick: (String) -> Unit,
+    onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             ShapeSnapHomeAppBar(
-                title = "Shape Snap",
-                isLoggedIn = currentUser != null,
-                onLoginClick = { viewModel.signInWithGoogle(context) },
-                onLogoutClick = { viewModel.logOut(context) },
+                title = "Home",
+                isLoggedIn = isLoggedIn,
+                onLoginClick = onLoginClick,
+                onLogoutClick = onLogoutClick,
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFFF8F9F9),
@@ -98,44 +147,22 @@ fun HomeScreen(
         containerColor = Color(0xFFF8F9F9),
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
-        when (state) {
-            is HomeState.Success -> {
-                val successState = state as HomeState.Success
-                HomeScreenContent(
-                    modifier = Modifier.fillMaxSize(),
-                    topPadding = innerPadding.calculateTopPadding(),
-                    bottomPadding = innerPadding.calculateBottomPadding(),
-                    presets = successState.presets,
-                    isRefreshing = isRefreshing,
-                    currentUser = currentUser,
-                    onRefresh = { viewModel.refreshPresets() },
-                    onLikeClick = { viewModel.toggleLike(it) },
-                    onSaveClick = { presetId ->
-                        viewModel.saveToStorage(presetId)
-                    }
-                )
-            }
-
-            is HomeState.Loading -> {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            is HomeState.Error -> {
-                // TODO: Error UI
-            }
-        }
+        HomeScreenContent(
+            topPadding = innerPadding.calculateTopPadding(),
+            bottomPadding = innerPadding.calculateBottomPadding(),
+            userId = userId,
+            presets = presets,
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            onLikeClick = onLikeClick,
+            onSaveClick = onSaveClick,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 
     if (showLimitReachedDialog) {
         LimitReachedDialog(
-            onDismiss = { viewModel.dismissLimitDialog() }
+            onDismiss = onDismiss,
         )
     }
 }
@@ -143,11 +170,11 @@ fun HomeScreen(
 @OptIn(ExperimentalTime::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenContent(
-    topPadding: androidx.compose.ui.unit.Dp,
-    bottomPadding: androidx.compose.ui.unit.Dp,
-    presets: List<Preset>,
+    topPadding: Dp,
+    bottomPadding: Dp,
+    userId: String?,
+    presets: ImmutableList<Preset>,
     isRefreshing: Boolean,
-    currentUser: User?,
     onRefresh: () -> Unit,
     onLikeClick: (String) -> Unit,
     onSaveClick: (String) -> Unit,
@@ -157,7 +184,7 @@ private fun HomeScreenContent(
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
 
-    val navBarsPaddingBottom = WindowInsets.navigationBars.getBottom(density)
+    WindowInsets.navigationBars.getBottom(density)
     val safeDrawingPadding = WindowInsets.safeDrawing
 
     PullToRefreshBox(
@@ -193,10 +220,8 @@ private fun HomeScreenContent(
             ) { preset ->
                 PresetCard(
                     preset = preset,
-                    isLiked = currentUser?.uid?.let { uid -> preset.likedUserIds.contains(uid) }
-                        ?: false,
-                    isSaved = currentUser?.uid?.let { uid -> preset.savedUserIds.contains(uid) }
-                        ?: false,
+                    isLiked = preset.likedUserIds.contains(userId),
+                    isSaved = preset.savedUserIds.contains(userId),
                     onLikeClick = { onLikeClick(preset.presetId) },
                     onSaveClick = { onSaveClick(preset.presetId) }
                 )
@@ -219,9 +244,11 @@ fun FeaturedMeshSection() {
             .fillMaxWidth()
             .height(160.dp)
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+        ) {
             Column(modifier = Modifier.align(Alignment.CenterStart)) {
                 Text(
                     text = "FEATURED MESH",
@@ -275,22 +302,6 @@ fun PresetCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
-
-                // Tag Overlay
-                Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .background(Color.White.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .align(Alignment.TopStart)
-                ) {
-                    Text(
-                        text = "NEW RELEASE",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                }
             }
 
             Column(modifier = Modifier.padding(20.dp)) {
@@ -305,11 +316,6 @@ fun PresetCard(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = Color.Black
-                        )
-                        Text(
-                            text = "Posted ${preset.createdAt.convertShapeSnapDateFormat()}",
-                            fontSize = 12.sp,
-                            color = Color.Gray
                         )
                     }
                     Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = Color.Gray)
@@ -354,7 +360,7 @@ fun PresetCard(
                             .height(48.dp)
                     ) {
                         Icon(
-                            painter = painterResource(id = android.R.drawable.ic_menu_save),
+                            painter = painterResource(id = R.drawable.ic_menu_save),
                             contentDescription = null,
                             modifier = Modifier.size(18.dp)
                         )
@@ -362,6 +368,13 @@ fun PresetCard(
                         Text("保存", fontWeight = FontWeight.Bold)
                     }
                 }
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = "Posted ${preset.createdAt.convertShapeSnapDateFormat()}",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.align(Alignment.End)
+                )
             }
         }
     }
@@ -385,14 +398,17 @@ fun LimitReachedDialog(onDismiss: () -> Unit) {
 @Composable
 fun HomeScreenPreview() {
     val presets = PresetsFactory.createPresetList()
-    HomeScreenContent(
+    HomeSuccessScreen(
+        userId = null,
         presets = presets,
+        isLoggedIn = false,
         isRefreshing = false,
-        currentUser = null,
-        topPadding = 64.dp,
-        bottomPadding = 0.dp,
+        showLimitReachedDialog = false,
         onRefresh = {},
         onLikeClick = {},
-        onSaveClick = {}
+        onSaveClick = {},
+        onLoginClick = {},
+        onLogoutClick = {},
+        onDismiss = {},
     )
 }

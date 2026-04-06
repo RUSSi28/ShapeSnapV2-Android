@@ -88,4 +88,6 @@ dependencies {
 
     // Mobile Ads SDK
     implementation(libs.play.services.ads)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
 }
