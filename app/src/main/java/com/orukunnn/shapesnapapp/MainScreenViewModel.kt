@@ -42,13 +42,13 @@ class MainScreenViewModel(
         _showLogOutConfirmDialog.value = show
     }
 
-    fun signInWithGoogle(context: Context, serverClientId: String) {
+    fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val user = authRepository.signInWithGoogle(
                     context = context,
-                    serverClientId = serverClientId,
+                    serverClientId = context.getString(R.string.default_web_client_id),
                 )
                 user?.uid?.let { uid ->
                     sharedPreferenceDatasource.saveUserId(uid)

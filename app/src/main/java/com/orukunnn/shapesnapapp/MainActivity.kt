@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -54,7 +53,6 @@ fun MainScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val backStack = rememberNavBackStack(Home)
     val context = LocalContext.current
-    val serverClientId = stringResource(R.string.default_web_client_id)
 
     // 現在のルートを取得
     val currentRoute = backStack.lastOrNull() ?: Home
@@ -69,7 +67,7 @@ fun MainScreen(
                         isLoggedIn = user != null,
                         onMenuButtonClick = {
                             if (user == null) {
-                                viewModel.signInWithGoogle(context, serverClientId)
+                                viewModel.signInWithGoogle(context)
                             } else {
                                 viewModel.setShowLogOutConfirmDialog(true)
                             }
