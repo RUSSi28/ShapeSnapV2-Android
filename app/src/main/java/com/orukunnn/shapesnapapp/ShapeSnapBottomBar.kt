@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -22,8 +19,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -50,9 +45,7 @@ fun ShapeSnapBottomBar(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-    val fabSize = 60.dp
-    // くりぬきの半径。FAB(48dp)に対して余裕を持たせつつ、"くりぬきすぎ"を防ぐために34dpに設定
-    val notchRadiusDp = 34.dp
+    val notchRadiusDp = 0.dp
     val notchRadiusPx = with(density) { notchRadiusDp.toPx() }
     val cornerRadiusPx = with(density) { 32.dp.toPx() }
 
@@ -65,13 +58,15 @@ fun ShapeSnapBottomBar(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.BottomCenter
         ) {
-            // 背景のノッチ付きバー
             Surface(
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                     .fillMaxWidth()
                     .height(64.dp),
-                shape = BottomBarNotchedShape(notchRadiusPx, cornerRadiusPx),
+                shape = BottomBarNotchedShape(
+                    notchRadius = notchRadiusPx,
+                    cornerRadius = cornerRadiusPx
+                ),
                 color = Color.White.copy(alpha = 0.95f),
                 shadowElevation = 4.dp
             ) {
@@ -79,7 +74,6 @@ fun ShapeSnapBottomBar(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 左側の2項目
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -98,10 +92,13 @@ fun ShapeSnapBottomBar(
                         )
                     }
 
-                    // 中央のスペース（固定幅で確保して対称性を担保）
-                    Spacer(modifier = Modifier.width(notchRadiusDp * 2))
+                    BottomNavItem(
+                        icon = Icons.Default.Home,
+                        label = "Profile",
+                        isSelected = currentRoute is Home,
+                        onClick = { onNavigate(Home) }
+                    )
 
-                    // 右側の2項目
                     Row(
                         modifier = Modifier.weight(1f),
                         horizontalArrangement = Arrangement.SpaceEvenly
@@ -121,24 +118,6 @@ fun ShapeSnapBottomBar(
                     }
                 }
             }
-
-            // 中央に浮かせるHomeボタン
-            FloatingActionButton(
-                onClick = { onNavigate(Home) },
-                shape = CircleShape,
-                containerColor = Color(0xFF005D53),
-                contentColor = Color.White,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp),
-                modifier = Modifier
-                    .padding(bottom = 44.dp) // バーのノッチに綺麗に収まる位置
-                    .size(fabSize)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
         }
 
         // 広告エリア
@@ -150,11 +129,11 @@ fun ShapeSnapBottomBar(
         ) {
             AndroidView(
                 factory = { context ->
-                    AdView(context).apply {
-                        setAdSize(AdSize.BANNER)
-                        adUnitId = "ca-app-pub-3940256099942544/63009"
-                        loadAd(AdRequest.Builder().build())
-                    }
+                    val adView = AdView(context)
+                    adView.setAdSize(AdSize.BANNER)
+                    adView.adUnitId = "ca-app-pub-3940256099942544/6300978111" // テストID
+                    adView.loadAd(AdRequest.Builder().build())
+                    adView
                 }
             )
         }
