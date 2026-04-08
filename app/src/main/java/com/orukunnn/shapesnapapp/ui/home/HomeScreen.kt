@@ -4,7 +4,6 @@ import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -33,8 +31,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,18 +43,18 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -148,15 +149,14 @@ fun HomeSuccessScreen(
         contentWindowInsets = WindowInsets(0)
     ) { innerPadding ->
         HomeScreenContent(
-            topPadding = innerPadding.calculateTopPadding(),
-            bottomPadding = innerPadding.calculateBottomPadding(),
             userId = userId,
             presets = presets,
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
             onLikeClick = onLikeClick,
             onSaveClick = onSaveClick,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .padding(innerPadding)
         )
     }
 
@@ -170,8 +170,6 @@ fun HomeSuccessScreen(
 @OptIn(ExperimentalTime::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenContent(
-    topPadding: Dp,
-    bottomPadding: Dp,
     userId: String?,
     presets: ImmutableList<Preset>,
     isRefreshing: Boolean,
@@ -181,33 +179,17 @@ private fun HomeScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val gridState = rememberLazyGridState()
-    val layoutDirection = LocalLayoutDirection.current
-    val density = LocalDensity.current
-
-    WindowInsets.navigationBars.getBottom(density)
-    val safeDrawingPadding = WindowInsets.safeDrawing
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier
     ) {
         LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Adaptive(minSize = 340.dp),
-            contentPadding = PaddingValues(
-                top = topPadding + 16.dp,
-                start = 16.dp + with(density) {
-                    safeDrawingPadding.getLeft(density, layoutDirection).toDp()
-                },
-                end = 16.dp + with(density) {
-                    safeDrawingPadding.getRight(density, layoutDirection).toDp()
-                },
-                bottom = bottomPadding
-            ),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             items(
                 items = presets,
@@ -218,7 +200,8 @@ private fun HomeScreenContent(
                     isLiked = preset.likedUserIds.contains(userId),
                     isSaved = preset.savedUserIds.contains(userId),
                     onLikeClick = { onLikeClick(preset.presetId) },
-                    onSaveClick = { onSaveClick(preset.presetId) }
+                    onSaveClick = { onSaveClick(preset.presetId) },
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
 
@@ -230,46 +213,6 @@ private fun HomeScreenContent(
     }
 }
 
-@Composable
-fun FeaturedMeshSection() {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp)
-        ) {
-            Column(modifier = Modifier.align(Alignment.CenterStart)) {
-                Text(
-                    text = "FEATURED MESH",
-                    color = Color(0xFF4A7C77),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
-                Text(
-                    text = "Trending BlendShapes",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Discover the latest expressive facial shapes for your VR Chat avatars.",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.fillMaxWidth(0.6f)
-                )
-            }
-            Text("🧊", fontSize = 48.sp, modifier = Modifier.align(Alignment.CenterEnd))
-        }
-    }
-}
-
 @OptIn(ExperimentalTime::class)
 @Composable
 fun PresetCard(
@@ -277,20 +220,23 @@ fun PresetCard(
     isLiked: Boolean,
     isSaved: Boolean,
     onLikeClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    var isDetailExpanded by remember { mutableStateOf(false) }
+
     Card(
         shape = RoundedCornerShape(32.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
-//                    .clip(RoundedCornerShape(32.dp))
             ) {
                 AsyncImage(
                     model = preset.imageUrl,
@@ -311,10 +257,34 @@ fun PresetCard(
                             text = preset.displayName.ifBlank { preset.characterTagId },
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
-                            color = Color.Black
+                            color = Color.Black,
                         )
                     }
-                    Icon(Icons.Default.MoreHoriz, contentDescription = null, tint = Color.Gray)
+                    Box {
+                        IconButton(
+                            onClick = { isMenuExpanded = true }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreHoriz,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = isMenuExpanded,
+                            onDismissRequest = {
+                                isMenuExpanded = false
+                            }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("詳細を見る") },
+                                onClick = {
+                                    isDetailExpanded = true
+                                    isMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
