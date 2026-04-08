@@ -210,11 +210,6 @@ private fun HomeScreenContent(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             modifier = modifier.fillMaxSize()
         ) {
-            // Featured Mesh Section
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                FeaturedMeshSection()
-            }
-
             items(
                 items = presets,
                 key = { it.presetId }
