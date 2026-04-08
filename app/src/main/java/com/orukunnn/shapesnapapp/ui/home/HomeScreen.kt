@@ -341,7 +341,10 @@ fun PresetCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("すき！", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (isLiked) "いいね済み" else "すき！",
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                     Button(
                         onClick = onSaveClick,
@@ -361,7 +364,10 @@ fun PresetCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("保存", fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (isSaved) "保存済み" else "保存",
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.size(8.dp))
@@ -381,7 +387,7 @@ fun LimitReachedDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("保存枠の上限です") },
-        text = { Text("無料プランでは最大${HomeScreenViewModel.FREE_LIMIT}枠まで保存できます。サブスクリプションに登録して無制限に保存しましょう！") },
+        text = { Text("無料プランでは最大${HomeScreenViewModel.FREE_LIMIT}枠まで保存できます。現在枠無制限のプランを準備中！") },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("閉じる")
