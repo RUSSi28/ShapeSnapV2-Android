@@ -62,6 +62,7 @@ import coil3.compose.AsyncImage
 import com.orukunnn.shapesnapapp.ShapeSnapHomeAppBar
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
 import com.orukunnn.shapesnapapp.data.model.preset.PresetsFactory
+import com.orukunnn.shapesnapapp.ui.login.LogOutConfirmDialog
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -77,6 +78,7 @@ fun HomeScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val userId = currentUser?.uid
+    val showLogOutConfirmDialog by viewModel.showLogOutConfirmDialog.collectAsStateWithLifecycle()
     val showLimitReachedDialog by viewModel.showLimitReachedDialog.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -88,12 +90,17 @@ fun HomeScreen(
                 presets = successState.presets.toPersistentList(),
                 isLoggedIn = currentUser != null,
                 isRefreshing = isRefreshing,
+                showLogOutConfirmDialog = showLogOutConfirmDialog,
                 showLimitReachedDialog = showLimitReachedDialog,
                 onRefresh = { viewModel.refreshPresets() },
                 onLikeClick = { viewModel.toggleLike(it) },
                 onSaveClick = { viewModel.saveToStorage(it) },
                 onLoginClick = { viewModel.signInWithGoogle(context) },
                 onLogoutClick = { viewModel.setShowLogOutConfirmDialog(true) },
+                onLogout = {
+                    viewModel.logOut(context)
+                    viewModel.setShowLogOutConfirmDialog(false)
+                },
                 onDismiss = { viewModel.dismissLimitDialog() }
             )
         }
@@ -120,12 +127,14 @@ fun HomeSuccessScreen(
     presets: ImmutableList<Preset>,
     isLoggedIn: Boolean,
     isRefreshing: Boolean,
+    showLogOutConfirmDialog: Boolean,
     showLimitReachedDialog: Boolean,
     onRefresh: () -> Unit,
     onLikeClick: (String) -> Unit,
     onSaveClick: (String) -> Unit,
     onLoginClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onLogout: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -157,6 +166,13 @@ fun HomeSuccessScreen(
             onSaveClick = onSaveClick,
             modifier = Modifier
                 .padding(innerPadding)
+        )
+    }
+
+    if (showLogOutConfirmDialog) {
+        LogOutConfirmDialog(
+            onLogOutConfirm = onLogout,
+            onDismiss = onDismiss,
         )
     }
 
@@ -375,12 +391,14 @@ fun HomeScreenPreview() {
         presets = presets,
         isLoggedIn = false,
         isRefreshing = false,
+        showLogOutConfirmDialog = false,
         showLimitReachedDialog = false,
         onRefresh = {},
         onLikeClick = {},
         onSaveClick = {},
         onLoginClick = {},
         onLogoutClick = {},
+        onLogout = {},
         onDismiss = {},
     )
 }
