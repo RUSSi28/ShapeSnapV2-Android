@@ -42,10 +42,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,6 +68,7 @@ import com.orukunnn.shapesnapapp.ui.login.LogOutConfirmDialog
 import com.orukunnn.shapesnapapp.util.convertShapeSnapDateFormat
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -80,6 +83,7 @@ fun HomeScreen(
     val userId = currentUser?.uid
     val showLogOutConfirmDialog by viewModel.showLogOutConfirmDialog.collectAsStateWithLifecycle()
     val showLimitReachedDialog by viewModel.showLimitReachedDialog.collectAsStateWithLifecycle()
+    val isLoadingMore by viewModel.isLoadingMore.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     when (state) {
@@ -88,6 +92,9 @@ fun HomeScreen(
             HomeSuccessScreen(
                 userId = userId,
                 presets = successState.presets.toPersistentList(),
+                hasMore = successState.hasMore,
+                isLoadingMore = isLoadingMore,
+                onLoadMore = { viewModel.loadMore() },
                 isLoggedIn = currentUser != null,
                 isRefreshing = isRefreshing,
                 showLogOutConfirmDialog = showLogOutConfirmDialog,
@@ -125,6 +132,9 @@ fun HomeScreen(
 fun HomeSuccessScreen(
     userId: String?,
     presets: ImmutableList<Preset>,
+    hasMore: Boolean,
+    isLoadingMore: Boolean,
+    onLoadMore: () -> Unit,
     isLoggedIn: Boolean,
     isRefreshing: Boolean,
     showLogOutConfirmDialog: Boolean,
@@ -160,6 +170,9 @@ fun HomeSuccessScreen(
         HomeScreenContent(
             userId = userId,
             presets = presets,
+            hasMore = hasMore,
+            isLoadingMore = isLoadingMore,
+            onLoadMore = onLoadMore,
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
             onLikeClick = onLikeClick,
@@ -188,6 +201,9 @@ fun HomeSuccessScreen(
 private fun HomeScreenContent(
     userId: String?,
     presets: ImmutableList<Preset>,
+    hasMore: Boolean,
+    isLoadingMore: Boolean,
+    onLoadMore: () -> Unit,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onLikeClick: (String) -> Unit,
@@ -195,6 +211,22 @@ private fun HomeScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val gridState = rememberLazyGridState()
+
+    LaunchedEffect(gridState, hasMore, presets.size, isLoadingMore) {
+        snapshotFlow {
+            gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        }
+            .distinctUntilChanged()
+            .collect { lastVisible ->
+                if (!hasMore || isLoadingMore) return@collect
+                val n = presets.size
+                if (n == 0) return@collect
+                val threshold = (n - 3).coerceAtLeast(0)
+                if (lastVisible >= threshold) {
+                    onLoadMore()
+                }
+            }
+    }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
@@ -219,6 +251,19 @@ private fun HomeScreenContent(
                     onSaveClick = { onSaveClick(preset.presetId) },
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
+            }
+
+            if (isLoadingMore) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
 
             // ボトムバーに隠れるのを防ぐためのSpacer
@@ -389,6 +434,9 @@ fun HomeScreenPreview() {
     HomeSuccessScreen(
         userId = null,
         presets = presets,
+        hasMore = false,
+        isLoadingMore = false,
+        onLoadMore = {},
         isLoggedIn = false,
         isRefreshing = false,
         showLogOutConfirmDialog = false,

@@ -4,26 +4,19 @@ import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.orukunnn.shapesnapapp.data.datasource.FirestoreDatasource
 import com.orukunnn.shapesnapapp.data.model.preset.Preset
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
 class PresetsRepositoryImpl(
     private val firestoreDatasource: FirestoreDatasource
 ) : PresetsRepository {
 
-    override fun getPresetsFlow(): Flow<List<Preset>> {
-        return firestoreDatasource.getPresetsFlow().map { entities ->
-            entities.map { Preset(it) }
-        }
-    }
-
-    override suspend fun getInitialPresets(): Pair<List<Preset>, DocumentSnapshot?> {
+    override suspend fun loadPresetsPage(lastDocument: DocumentSnapshot?): Pair<List<Preset>, DocumentSnapshot?> {
         return try {
-            val pair = firestoreDatasource.getPresetEntities(PAGE_SIZE)
+            val pair =
+                firestoreDatasource.getPresetEntities(PresetsRepository.PAGE_SIZE, lastDocument)
             val presets = pair.first.map { Preset(it) }
-            Pair(presets, null)
+            Pair(presets, pair.second)
         } catch (e: Exception) {
-            Log.d("PresetsRepositoryImpl", "getFirstPresets: ${e.message}")
+            Log.d("PresetsRepositoryImpl", "loadPresetsPage: ${e.message}")
             Pair(emptyList(), null)
         }
     }
@@ -38,7 +31,4 @@ class PresetsRepositoryImpl(
         }
     }
 
-    companion object {
-        private const val PAGE_SIZE = 10L
-    }
 }

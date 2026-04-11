@@ -1,169 +1,1 @@
-package com.orukunnn.shapesnapapp.ui.home
-
-import android.content.Context
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.orukunnn.shapesnapapp.R
-import com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasource
-import com.orukunnn.shapesnapapp.data.model.preset.Preset
-import com.orukunnn.shapesnapapp.data.model.user.User
-import com.orukunnn.shapesnapapp.data.repository.auth.AuthRepository
-import com.orukunnn.shapesnapapp.data.repository.preset.PresetsRepository
-import com.orukunnn.shapesnapapp.data.repository.user.UserRepository
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-
-sealed interface HomeState {
-    data class Success(val presets: List<Preset>) : HomeState
-    data object Loading : HomeState
-    data object Error : HomeState
-}
-
-class HomeScreenViewModel(
-    private val presetsRepository: PresetsRepository,
-    private val authRepository: AuthRepository,
-    private val userRepository: UserRepository,
-    private val sharedPreferenceDatasource: SharedPreferenceDatasource,
-) : ViewModel() {
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val currentUser: StateFlow<User?> = authRepository.currentUser
-        .flatMapLatest { firebaseUser ->
-            if (firebaseUser != null) {
-                userRepository.getUserFlow(firebaseUser.uid)
-            } else {
-                flowOf(null)
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
-
-    val state: StateFlow<HomeState> = presetsRepository.getPresetsFlow()
-        .map<List<Preset>, HomeState> { presets -> HomeState.Success(presets) }
-        .catch { e ->
-            Log.e("HomeScreenViewModel", "Error fetching presets: ${e.message}")
-            emit(HomeState.Error)
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HomeState.Loading
-        )
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
-
-    private val _isRefreshing = MutableStateFlow(false)
-    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-
-    private val _showLimitReachedDialog = MutableStateFlow(false)
-    val showLimitReachedDialog = _showLimitReachedDialog.asStateFlow()
-
-    private val _showLogOutConfirmDialog = MutableStateFlow(false)
-    val showLogOutConfirmDialog = _showLogOutConfirmDialog.asStateFlow()
-
-    fun signInWithGoogle(context: Context) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val user = authRepository.signInWithGoogle(
-                    context = context,
-                    serverClientId = context.getString(R.string.default_web_client_id),
-                )
-                user?.uid?.let { uid ->
-                    sharedPreferenceDatasource.saveUserId(uid)
-                    userRepository.saveUserIfNotExists(uid)
-                }
-            } catch (e: Exception) {
-                // Handle error if needed
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun logOut(context: Context) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                authRepository.signOut(context)
-                sharedPreferenceDatasource.clear()
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun setShowLogOutConfirmDialog(show: Boolean) {
-        _showLogOutConfirmDialog.value = show
-    }
-
-    fun dismissLimitDialog() {
-        _showLimitReachedDialog.value = false
-    }
-
-    fun refreshPresets() {
-        viewModelScope.launch {
-            _isRefreshing.value = true
-            // FirestoreのデータはFlowでリアルタイムに更新されますが、
-            // インジケータのアニメーションを適切に完了させるために、
-            // またユーザーに更新が行われたことを視覚的に伝えるために、一定時間のディレイを入れます。
-            delay(1000)
-            _isRefreshing.value = false
-        }
-    }
-
-    fun toggleLike(presetId: String) {
-        val user = currentUser.value ?: return
-        viewModelScope.launch {
-            try {
-                userRepository.toggleLike(presetId, user.uid)
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Failed to toggle like: ${e.message}")
-            }
-        }
-    }
-
-    fun saveToStorage(presetId: String) {
-        val user = currentUser.value ?: return
-        val currentState = state.value
-        if (currentState !is HomeState.Success) return
-
-        val isAlreadySaved = currentState.presets.find { it.presetId == presetId }
-            ?.savedUserIds?.contains(user.uid) ?: false
-
-        if (!isAlreadySaved && !user.isSubscribed && user.storage.size >= FREE_LIMIT) {
-            _showLimitReachedDialog.value = true
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                if (isAlreadySaved) {
-                    userRepository.removeStorageBy(presetId, user.uid)
-                } else {
-                    userRepository.addStorageBy(presetId, user.uid)
-                }
-            } catch (e: Exception) {
-                Log.e("HomeScreenViewModel", "Failed to toggle storage: ${e.message}")
-            }
-        }
-    }
-
-    companion object {
-        const val FREE_LIMIT = 5
-    }
-}
+package com.orukunnn.shapesnapapp.ui.homeimport android.content.Contextimport android.util.Logimport androidx.lifecycle.ViewModelimport androidx.lifecycle.viewModelScopeimport com.google.firebase.firestore.DocumentSnapshotimport com.orukunnn.shapesnapapp.Rimport com.orukunnn.shapesnapapp.data.datasource.SharedPreferenceDatasourceimport com.orukunnn.shapesnapapp.data.model.preset.Presetimport com.orukunnn.shapesnapapp.data.model.user.Userimport com.orukunnn.shapesnapapp.data.repository.auth.AuthRepositoryimport com.orukunnn.shapesnapapp.data.repository.preset.PresetsRepositoryimport com.orukunnn.shapesnapapp.data.repository.user.UserRepositoryimport kotlinx.coroutines.ExperimentalCoroutinesApiimport kotlinx.coroutines.delayimport kotlinx.coroutines.flow.MutableStateFlowimport kotlinx.coroutines.flow.SharingStartedimport kotlinx.coroutines.flow.StateFlowimport kotlinx.coroutines.flow.asStateFlowimport kotlinx.coroutines.flow.flatMapLatestimport kotlinx.coroutines.flow.flowOfimport kotlinx.coroutines.flow.stateInimport kotlinx.coroutines.launchsealed interface HomeState {    data class Success(val presets: List<Preset>, val hasMore: Boolean) : HomeState    data object Loading : HomeState    data object Error : HomeState}class HomeScreenViewModel(    private val presetsRepository: PresetsRepository,    private val authRepository: AuthRepository,    private val userRepository: UserRepository,    private val sharedPreferenceDatasource: SharedPreferenceDatasource,) : ViewModel() {    private val _state = MutableStateFlow<HomeState>(HomeState.Loading)    val state: StateFlow<HomeState> = _state.asStateFlow()    private var lastPagingCursor: DocumentSnapshot? = null    private val _isLoadingMore = MutableStateFlow(false)    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()    @OptIn(ExperimentalCoroutinesApi::class)    val currentUser: StateFlow<User?> = authRepository.currentUser        .flatMapLatest { firebaseUser ->            if (firebaseUser != null) {                userRepository.getUserFlow(firebaseUser.uid)            } else {                flowOf(null)            }        }.stateIn(            scope = viewModelScope,            started = SharingStarted.WhileSubscribed(5000),            initialValue = null        )    init {        loadInitialPage()    }    private fun loadInitialPage() {        viewModelScope.launch {            _state.value = HomeState.Loading            try {                val (list, cursor) = presetsRepository.loadPresetsPage(null)                lastPagingCursor = cursor                val hasMore = list.size >= PresetsRepository.PAGE_SIZE.toInt()                _state.value = HomeState.Success(list, hasMore)            } catch (e: Exception) {                Log.e("HomeScreenViewModel", "loadInitialPage: ${e.message}")                _state.value = HomeState.Error            }        }    }    fun loadMore() {        val current = _state.value        if (current !is HomeState.Success || !current.hasMore || _isLoadingMore.value) return        val cursor = lastPagingCursor ?: return        viewModelScope.launch {            _isLoadingMore.value = true            try {                val (newItems, newCursor) = presetsRepository.loadPresetsPage(cursor)                lastPagingCursor = newCursor                val merged = current.presets + newItems                val hasMore = newItems.size >= PresetsRepository.PAGE_SIZE.toInt()                _state.value = HomeState.Success(merged, hasMore)            } catch (e: Exception) {                Log.e("HomeScreenViewModel", "loadMore: ${e.message}")            } finally {                _isLoadingMore.value = false            }        }    }    private val _isRefreshing = MutableStateFlow(false)    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()    private val _showLimitReachedDialog = MutableStateFlow(false)    val showLimitReachedDialog = _showLimitReachedDialog.asStateFlow()    private val _showLogOutConfirmDialog = MutableStateFlow(false)    val showLogOutConfirmDialog = _showLogOutConfirmDialog.asStateFlow()    fun signInWithGoogle(context: Context) {        viewModelScope.launch {            _state.value = HomeState.Loading            try {                val user = authRepository.signInWithGoogle(                    context = context,                    serverClientId = context.getString(R.string.default_web_client_id),                )                user?.uid?.let { uid ->                    sharedPreferenceDatasource.saveUserId(uid)                    userRepository.saveUserIfNotExists(uid)                }            } catch (e: Exception) {                // Handle error if needed            } finally {                _state.value = HomeState.Loading            }        }    }    fun logOut(context: Context) {        viewModelScope.launch {            _state.value = HomeState.Loading            try {                authRepository.signOut(context)                sharedPreferenceDatasource.clear()            } catch (e: Exception) {                _state.value = HomeState.Error            } finally {                _state.value = HomeState.Loading            }        }    }    fun setShowLogOutConfirmDialog(show: Boolean) {        _showLogOutConfirmDialog.value = show    }    fun dismissLimitDialog() {        _showLimitReachedDialog.value = false    }    fun refreshPresets() {        viewModelScope.launch {            _isRefreshing.value = true            try {                lastPagingCursor = null                val (list, cursor) = presetsRepository.loadPresetsPage(null)                lastPagingCursor = cursor                val hasMore = list.size >= PresetsRepository.PAGE_SIZE.toInt()                _state.value = HomeState.Success(list, hasMore)            } catch (e: Exception) {                Log.e("HomeScreenViewModel", "refreshPresets: ${e.message}")                _state.value = HomeState.Error            } finally {                delay(300)                _isRefreshing.value = false            }        }    }    fun toggleLike(presetId: String) {        val user = currentUser.value ?: return        viewModelScope.launch {            try {                userRepository.toggleLike(presetId, user.uid)            } catch (e: Exception) {                Log.e("HomeScreenViewModel", "Failed to toggle like: ${e.message}")            }        }    }    fun saveToStorage(presetId: String) {        val user = currentUser.value ?: return        val currentState = state.value        if (currentState !is HomeState.Success) return        val isAlreadySaved = currentState.presets.find { it.presetId == presetId }            ?.savedUserIds?.contains(user.uid) ?: false        if (!isAlreadySaved && !user.isSubscribed && user.storage.size >= FREE_LIMIT) {            _showLimitReachedDialog.value = true            return        }        viewModelScope.launch {            try {                if (isAlreadySaved) {                    userRepository.removeStorageBy(presetId, user.uid)                } else {                    userRepository.addStorageBy(presetId, user.uid)                }            } catch (e: Exception) {                Log.e("HomeScreenViewModel", "Failed to toggle storage: ${e.message}")            }        }    }    companion object {        const val FREE_LIMIT = 5    }}

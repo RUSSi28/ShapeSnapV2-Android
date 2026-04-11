@@ -16,22 +16,6 @@ class FirestoreDatasource(
     private val firestore: FirebaseFirestore
 ) {
 
-    fun getPresetsFlow(): Flow<List<PresetEntity>> = callbackFlow {
-        val subscription = firestore.collection(PRESETS_COLLECTION)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                if (snapshot != null) {
-                    val presets = snapshot.toObjects(PresetEntity::class.java)
-                    trySend(presets)
-                }
-            }
-        awaitClose { subscription.remove() }
-    }
-
     fun getSavedPresetsFlow(userId: String): Flow<List<PresetEntity>> = callbackFlow {
         if (userId.isBlank()) {
             trySend(emptyList())
